@@ -74,19 +74,19 @@ Update Price Every Second
 For Swap BNB <> USDT
 Mouse Left BNB Sell to USDT ,Mouse Left USDT Buy to BNB
 
-![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/1.jpg)
+![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/2.jpg)
 
 Input Swap Amount
 
-![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/1.jpg)
+![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/3.jpg)
 
 Confirm Swap
 
-![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/1.jpg)
+![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/4.jpg)
 
 Sending
 
-![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/1.jpg)
+![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/5.jpg)
 
 
 

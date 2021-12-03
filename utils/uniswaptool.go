@@ -196,7 +196,6 @@ func GetAmountsOut(router string, path []common.Address, amountIn *big.Int, clie
 
 	amountsOut, err := uniswapv2router02.GetAmountsOut(&bind.CallOpts{}, amountIn, path)
 	if err != nil {
-
 		log.Fatal(err)
 	}
 	price := amountsOut[len(path)-1]

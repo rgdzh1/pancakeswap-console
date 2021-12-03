@@ -68,31 +68,35 @@ run
      ./pancakeswap-console swap
 
 Update Price Every Second
-
+![image](https://github.com/walletConsole/pancakeswap-console/blob/master/1.jpg)
 
 ### Swap 
 For Swap BNB <> USDT
 Mouse Left BNB Sell to USDT ,Mouse Left USDT Buy to BNB
 
-
+![image](https://github.com/walletConsole/pancakeswap-console/blob/master/2.jpg)
 
 Input Swap Amount
 
-
-
-
+![image](https://github.com/walletConsole/pancakeswap-console/blob/master/3.jpg)
 
 Confirm Swap
 
+![image](https://github.com/walletConsole/pancakeswap-console/blob/master/4.jpg)
 
+Sending
+
+![image](https://github.com/walletConsole/pancakeswap-console/blob/master/5.jpg)
 
 
 
 ### Note
-* The price may be a little different from that of the official website.Because i using route path  <token> -> WBNB -> USDT
+* The price may be a little different from that of the official website.Because using route path  <token> -> WBNB -> USDT
 * Don't set up too many trading pairs, there will be problems with rpc node.
 
 
 ### Donations
 
-BNB/CAKE: 0xec5fa25e37dfa8fa42210a94cbc8a61c7fd3751c
+BNB/CAKE/USDT: 0xec5fa25e37dfa8fa42210a94cbc8a61c7fd3751c
+
+email: irmakgu40@gmail.com

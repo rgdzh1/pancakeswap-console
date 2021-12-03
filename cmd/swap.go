@@ -98,14 +98,12 @@ func (tp *Account) buildContent() string {
 
 	erc20Token := utils.Erc20Token(config.CF.BscToken[strings.ToLower("usdt")], tp.client)
 	balanceOf, err := erc20Token.BalanceOf(utils.DefaultCallOpts, common.HexToAddress(config.CF.FromAddress))
+
 	decimals, _ := erc20Token.Decimals(utils.DefaultCallOpts)
 	usdtbalance := 0.0
 	if err == nil {
-		if balanceOf.Uint64() > 0 {
-			ethBalance := utils.ToDecimal(balanceOf.String(), int(decimals))
-			usdtbalance = utils.Str2Float(ethBalance.String())
-
-		}
+		ethBalance := utils.ToDecimal(balanceOf.String(), int(decimals))
+		usdtbalance = utils.Str2Float(ethBalance.String())
 	}
 
 	gasPrice, err := client.SuggestGasPrice(context.Background())
@@ -155,10 +153,10 @@ func (tp *TradePairs) buildContent() string {
 		decimals, _ := erc20Token.Decimals(utils.DefaultCallOpts)
 
 		if err == nil {
-			if balanceOf.Uint64() > 0 {
-				ethBalance := utils.ToDecimal(balanceOf.String(), int(decimals))
-				frombalance = utils.Str2Float(ethBalance.String())
-			}
+
+			ethBalance := utils.ToDecimal(balanceOf.String(), int(decimals))
+			frombalance = utils.Str2Float(ethBalance.String())
+
 		}
 
 	}
@@ -172,10 +170,10 @@ func (tp *TradePairs) buildContent() string {
 		decimals, _ := erc20Token.Decimals(utils.DefaultCallOpts)
 
 		if err == nil {
-			if balanceOf.Uint64() > 0 {
-				ethBalance := utils.ToDecimal(balanceOf.String(), int(decimals))
-				tobalance = utils.Str2Float(ethBalance.String())
-			}
+
+			ethBalance := utils.ToDecimal(balanceOf.String(), int(decimals))
+			tobalance = utils.Str2Float(ethBalance.String())
+
 		}
 
 	}
@@ -228,23 +226,35 @@ var monitorSwapCmd = &cobra.Command{
 	},
 }
 
-func GetAmountsOut(fromSymbol, toSymbol, amount string) float64 {
+func GetAmountsOut(fromSymbol, toSymbol, amount string) (float64, string) {
 	var swapFromTokenAddress string
 	if strings.ToLower(fromSymbol) == "bnb" {
 		swapFromTokenAddress = config.BscToken("wbnb")
 	} else {
-		swapFromTokenAddress = config.BscToken(fromSymbol)
+		swapFromTokenAddress = config.BscToken(strings.ToLower(fromSymbol))
 	}
+
 	var swapToTokenAddress string
 	if strings.ToLower(toSymbol) == "bnb" {
 		swapToTokenAddress = config.BscToken("wbnb")
 	} else {
-		swapToTokenAddress = config.BscToken(fromSymbol)
+		swapToTokenAddress = config.BscToken(strings.ToLower(toSymbol))
 	}
 
 	path, err := utils.CalculatePath(fromSymbol, toSymbol, config.CF.PancakeRouter, client)
 	if err != nil {
 		log.Fatal(err)
+	}
+	var pathStr string
+	for i, pa := range path {
+		paToken := utils.Erc20Token(pa.String(), client)
+		symbol, _ := paToken.Symbol(utils.DefaultCallOpts)
+		if i < len(path)-1 {
+			pathStr = pathStr + fmt.Sprintf("%s -> ", symbol)
+		} else {
+			pathStr = pathStr + fmt.Sprintf("%s", symbol)
+		}
+
 	}
 
 	value := utils.Str2Float(amount)
@@ -256,9 +266,9 @@ func GetAmountsOut(fromSymbol, toSymbol, amount string) float64 {
 	swapToDecimals, _ := swapTo.Decimals(utils.DefaultCallOpts)
 
 	amountsOut := utils.GetAmountsOut(config.CF.PancakeRouter, path, amountInBig, client)
-	//log.Printf("%v", amountsOut)
+
 	tokenAmountOutFloat := SlippageAmount(amountsOut, swapToDecimals, err)
-	return tokenAmountOutFloat
+	return tokenAmountOutFloat, pathStr
 }
 func SlippageAmount(amountsOut *big.Int, swapToDecimals uint8, err error) float64 {
 	tokenAmountOutStr := utils.ToDecimal(amountsOut.String(), int(swapToDecimals)).String()

@@ -23,12 +23,13 @@ func keybindings(g *gocui.Gui) error {
 func layout(g *gocui.Gui) error {
 	maxX, _ := g.Size()
 
-	if v, err := g.SetView("help", maxX-43, 0, maxX-1, 5); err != nil {
+	if v, err := g.SetView("help", maxX-43, 0, maxX-1, 7); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
 		fmt.Fprintln(v, "KEYBINDINGS")
 		fmt.Fprintln(v, "Mouse Left On Token: Swap")
+		fmt.Fprintln(v, "Enter: Confirm Input")
 		fmt.Fprintln(v, "^C: Exit")
 		fmt.Fprintln(v, "^E: Close Window/Cancel Input")
 	}
@@ -115,6 +116,26 @@ func buyTokenInputFunc(fromSymbol, toSymbol string) func(g *gocui.Gui, v *gocui.
 			showMsg(g, "balance too low")
 			return nil
 		}
+		var balance float64
+		if strings.ToLower(selectText) == "bnb" {
+			ethBalance := utils.EthBalance(config.CF.FromAddress, client)
+			balance = utils.Str2Float(ethBalance)
+		} else {
+			erc20Token := utils.Erc20Token(config.CF.BscToken[strings.ToLower(selectText)], client)
+			balanceOf, err := erc20Token.BalanceOf(utils.DefaultCallOpts, common.HexToAddress(config.CF.FromAddress))
+			if err != nil {
+				showMsg(g, err.Error())
+				return nil
+			}
+			decimals, _ := erc20Token.Decimals(utils.DefaultCallOpts)
+			ethBalance := utils.ToDecimal(balanceOf.String(), int(decimals))
+			balance = utils.Str2Float(ethBalance.String())
+
+		}
+		if float > balance {
+			showMsg(g, "balance too low")
+			return nil
+		}
 
 		if v, err := g.SetView("buybox", 1, maxY-10, 50, maxY-4); err != nil {
 
@@ -128,7 +149,7 @@ func buyTokenInputFunc(fromSymbol, toSymbol string) func(g *gocui.Gui, v *gocui.
 			if _, err := g.SetCurrentView("buybox"); err != nil {
 				return err
 			}
-			v.Title = "Input " + selectText + " Amount"
+			v.Title = "Input " + selectText + " Amount  <Enter>"
 			v.Editable = true
 			if strings.ToLower(selectText) == strings.ToLower(fromSymbol) {
 				if err := g.SetKeybinding("buybox", gocui.KeyEnter, gocui.ModNone, buyShowConfirmFunc(fromSymbol, toSymbol, amountText)); err != nil {
@@ -174,10 +195,11 @@ func buyShowConfirmFunc(fromSymbol, toSymbol, amount string) func(g *gocui.Gui, 
 			}
 			preView = buyboxOut
 
-			buyboxOut.Title = "Confirm"
-			amountsOut := GetAmountsOut(fromSymbol, toSymbol, buffer)
+			buyboxOut.Title = "Confirm <Enter>"
+			amountsOut, path := GetAmountsOut(fromSymbol, toSymbol, buffer)
 			buyboxOut.Write([]byte(fmt.Sprintf("%s: %s\n", fromSymbol, buffer)))
-			buyboxOut.Write([]byte(fmt.Sprintf("%s: %f", toSymbol, amountsOut)))
+			buyboxOut.Write([]byte(fmt.Sprintf("%s: %f\n", toSymbol, amountsOut)))
+			buyboxOut.Write([]byte(fmt.Sprintf("%s", path)))
 
 			if err := g.SetKeybinding("buyShowConfirmFunc", gocui.KeyEnter, gocui.ModNone, buyConfirmFunc(fromSymbol, toSymbol, buffer)); err != nil {
 				log.Panicln(err)
@@ -194,15 +216,15 @@ func buyShowConfirmFunc(fromSymbol, toSymbol, amount string) func(g *gocui.Gui, 
 
 func buyConfirmFunc(fromSymbol, toSymbol, amount string) func(g *gocui.Gui, v *gocui.View) error {
 	return func(g *gocui.Gui, v *gocui.View) error {
-		_, cy := v.Cursor()
+		//_, cy := v.Cursor()
 
 		//g.DeleteKeybindings(v.Name())
 		//if err := g.DeleteView(v.Name()); err != nil {
 		//	return err
 		//}
 		closeBox(g, v)
-		maxX, _ := g.Size()
-		if buyboxOut, err := g.SetView("buyConfirmFunc", maxX/2-40, cy+5, maxX/2+40, cy+10); err != nil {
+		_, maxY := g.Size()
+		if buyboxOut, err := g.SetView("buyConfirmFunc", 1, maxY-10, 100, maxY-4); err != nil {
 			if err != gocui.ErrUnknownView {
 				return err
 			}
@@ -213,43 +235,46 @@ func buyConfirmFunc(fromSymbol, toSymbol, amount string) func(g *gocui.Gui, v *g
 				closeBox(g, preView)
 			}
 			preView = buyboxOut
-			buyboxOut.Title = "txhash"
+			buyboxOut.Title = "Sending"
+			buyboxOut.Wrap = true
 			hash := Swap(fromSymbol, toSymbol, amount)
 
-			buyboxOut.Write([]byte(fmt.Sprintf("%s %s", hash, "pending")))
+			buyboxOut.Write([]byte(fmt.Sprintf("%s\n", hash)))
 			if err := g.SetKeybinding("buyConfirmFunc", gocui.KeyCtrlE, gocui.ModNone, closeBox); err != nil {
 				log.Panicln(err)
 			}
-			go func(hash string) {
+			go func(hash string, v *gocui.View) {
 				for {
 					select {
 					case <-time.After(1 * time.Second):
 						var sprintf string
 						tx, err := client.TransactionReceipt(context.Background(), common.HexToHash(hash))
 						if err != nil {
-							sprintf = "pending"
+							sprintf = "pending......"
+							g.Update(func(g *gocui.Gui) error {
+								v.Write([]byte(fmt.Sprintf("%s\t", sprintf)))
+								return nil
+							})
 						} else {
 							status := int(tx.Status)
 							if status != 1 {
-								sprintf = "failed"
+								sprintf = "failed....... closing window"
 							} else {
-								sprintf = "success"
+								sprintf = "success...... closing window"
 							}
+							g.Update(func(g *gocui.Gui) error {
+								v.Write([]byte(fmt.Sprintf("%s\n", sprintf)))
+								return nil
+							})
+							go func() {
+								time.Sleep(2 * time.Second)
+								closeBox(g, v)
+							}()
+							return
 						}
-
-						g.Update(func(g *gocui.Gui) error {
-							v, err := g.View(buyboxOut.Name())
-							if err != nil {
-								return err
-							}
-							v.Clear()
-							fmt.Fprintln(v, fmt.Sprintf("%s %s", hash, sprintf))
-							return nil
-						})
-
 					}
 				}
-			}(hash)
+			}(hash, buyboxOut)
 		}
 
 		return nil

@@ -40,15 +40,15 @@ func layout(g *gocui.Gui) error {
 		}
 		v.Title = "Account"
 		account := Account{
-			address: config.CF.FromAddress,
+			Address: config.CF.FromAddress,
 			Refreshable: Refreshable{
-				client:  client,
-				g:       g,
-				view:    "account",
-				content: make(chan string),
+				Client:  Client,
+				G:       g,
+				View:    "account",
+				Content: "Loading...",
 			},
 		}
-		account.start()
+		account.Start()
 
 	}
 
@@ -56,6 +56,7 @@ func layout(g *gocui.Gui) error {
 	stepY := 5
 	startY := 3
 	startX := 1
+	stopY := 0
 	//stopY := startY + stepY
 	for ind, symbol := range config.CF.PriceToken {
 		i := strings.LastIndex(symbol, "-")
@@ -65,6 +66,7 @@ func layout(g *gocui.Gui) error {
 		title := symbol
 
 		stopX := startX + stepX
+		stopY = startY + stepY
 		if v, err := g.SetView(viewName, startX, startY, stopX, startY+stepY); err != nil {
 			if err != gocui.ErrUnknownView {
 				return err
@@ -72,20 +74,20 @@ func layout(g *gocui.Gui) error {
 			v.Title = title
 			//go updatePrice(g, viewName, symbol)
 			tradePairs := TradePairs{
-				fromSymbol: fromToken,
-				toSymbol:   toToken,
+				FromSymbol: fromToken,
+				ToSymbol:   toToken,
 				Refreshable: Refreshable{
-					client:  client,
-					g:       g,
-					view:    viewName,
-					content: make(chan string),
+					Client:  Client,
+					G:       g,
+					View:    viewName,
+					Content: "Loading...",
 				},
 			}
-			tradePairs.start()
+			tradePairs.Start()
 
-			if err := g.SetKeybinding(viewName, gocui.MouseLeft, gocui.ModNone, buyTokenInputFunc(fromToken, toToken)); err != nil {
-				return err
-			}
+			//if err := g.SetKeybinding(viewName, gocui.MouseLeft, gocui.ModNone, buyTokenInputFunc(fromToken, toToken)); err != nil {
+			//	return err
+			//}
 		}
 		if (ind+1)%8 == 0 {
 			startX = 1
@@ -94,6 +96,45 @@ func layout(g *gocui.Gui) error {
 			startX = stopX + 1
 		}
 	}
+	startX = 1
+	startY = stopY + 1
+	stepX = 30
+	stepY = 5
+	for ind, symbol := range config.CF.ShowSyrupPool {
+
+		viewName := fmt.Sprintf("Syrup-%s", symbol)
+		title := viewName
+
+		stopX := startX + stepX
+		if v, err := g.SetView(viewName, startX, startY, stopX, startY+stepY); err != nil {
+			if err != gocui.ErrUnknownView {
+				return err
+			}
+			v.Title = title
+			//go updatePrice(g, viewName, symbol)
+			tradePairs := SyrupPool{
+				PoolName: symbol,
+				Refreshable: Refreshable{
+					Client:  Client,
+					G:       g,
+					View:    viewName,
+					Content: "Loading...",
+				},
+			}
+			tradePairs.Start()
+
+			//if err := g.SetKeybinding(viewName, gocui.MouseLeft, gocui.ModNone, buyTokenInputFunc(fromToken, toToken)); err != nil {
+			//	return err
+			//}
+		}
+		if (ind+1)%8 == 0 {
+			startX = 1
+			startY = startY + stepY + 1
+		} else {
+			startX = stopX + 1
+		}
+	}
+
 	return nil
 }
 
@@ -113,18 +154,18 @@ func buyTokenInputFunc(fromSymbol, toSymbol string) func(g *gocui.Gui, v *gocui.
 		amountText := strings.TrimSpace(l[strings.Index(l, ":")+1:])
 		float := utils.Str2Float(amountText)
 		if float <= 0 {
-			showMsg(g, "balance too low")
+			ShowMsg(g, "balance too low")
 			return nil
 		}
 		var balance float64
 		if strings.ToLower(selectText) == "bnb" {
-			ethBalance := utils.EthBalance(config.CF.FromAddress, client)
+			ethBalance := utils.EthBalance(config.CF.FromAddress, Client)
 			balance = utils.Str2Float(ethBalance)
 		} else {
-			erc20Token := utils.Erc20Token(config.CF.BscToken[strings.ToLower(selectText)], client)
+			erc20Token := utils.Erc20Token(config.CF.BscToken[strings.ToLower(selectText)], Client)
 			balanceOf, err := erc20Token.BalanceOf(utils.DefaultCallOpts, common.HexToAddress(config.CF.FromAddress))
 			if err != nil {
-				showMsg(g, err.Error())
+				ShowMsg(g, err.Error())
 				return nil
 			}
 			decimals, _ := erc20Token.Decimals(utils.DefaultCallOpts)
@@ -133,7 +174,7 @@ func buyTokenInputFunc(fromSymbol, toSymbol string) func(g *gocui.Gui, v *gocui.
 
 		}
 		if float > balance {
-			showMsg(g, "balance too low")
+			ShowMsg(g, "balance too low")
 			return nil
 		}
 
@@ -177,7 +218,7 @@ func buyShowConfirmFunc(fromSymbol, toSymbol, amount string) func(g *gocui.Gui, 
 		buffer = strings.Trim(buffer, "\n ")
 		float := utils.Str2Float(buffer)
 		if float <= 0 {
-			showMsg(g, "balance too low")
+			ShowMsg(g, "balance too low")
 			return nil
 		}
 
@@ -248,7 +289,7 @@ func buyConfirmFunc(fromSymbol, toSymbol, amount string) func(g *gocui.Gui, v *g
 					select {
 					case <-time.After(1 * time.Second):
 						var sprintf string
-						tx, err := client.TransactionReceipt(context.Background(), common.HexToHash(hash))
+						tx, err := Client.TransactionReceipt(context.Background(), common.HexToHash(hash))
 						if err != nil {
 							sprintf = "pending......"
 							g.Update(func(g *gocui.Gui) error {
@@ -285,7 +326,7 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }
 
-func showMsg(g *gocui.Gui, msg string) error {
+func ShowMsg(g *gocui.Gui, msg string) error {
 
 	if preView != nil {
 		closeBox(g, preView)

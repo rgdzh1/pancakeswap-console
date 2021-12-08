@@ -1,5 +1,5 @@
 # Pancakeswap Console
-A Console Application Use Pancakeswap To Swap Token
+A Pancakeswap Application 
 
 ## Why
 It is a pity that some areas do not have access to the functions of PancakeSwap.
@@ -20,17 +20,19 @@ Clone & compile:
     go build
 
 ## Features
-* RealTime Prices      [x]
-* Simple Swap          [x]
-* Syrup Pool           [ ]
+* Prices      [x]
+* Syrup Pool           [x]
 * IFO                  [ ]
 * Batch Transfer       [ ]
 * Batch Deposit Syrup Pool [ ]
 
-## Use
-rename tool-conf.yaml.sample to tool-conf.yaml. Add Address And Private Key.
 
-Your private key is secure. You can check the code.
+
+
+
+## Use
+rename tool-conf.yaml.sample to tool-conf.yaml. Set You Address
+
 
 ```yaml
 Bsc:
@@ -38,7 +40,6 @@ Bsc:
 
 # u can check code , u private key is safe
 FromAddress: "xxx"
-PrivateKey:  "xxxx"
 
 #  Token to Swap,Do not add too many Token
 PriceToken:
@@ -65,28 +66,10 @@ BscToken: {
 ```
 run
 
-     ./pancakeswap-console swap
+     ./pancakeswap-console
 
 Update Price Every Second
-![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/1.jpg)
-
-### Swap 
-For Swap BNB <> USDT
-Mouse Left BNB Sell to USDT ,Mouse Left USDT Buy to BNB
-
-![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/2.jpg)
-
-Input Swap Amount
-
-![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/3.jpg)
-
-Confirm Swap
-
-![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/4.jpg)
-
-Sending
-
-![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/5.jpg)
+![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/6.jpg)
 
 
 

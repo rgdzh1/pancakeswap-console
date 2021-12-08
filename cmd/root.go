@@ -17,10 +17,12 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/jroimartin/gocui"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/walletConsole/pancakeswap-console/config"
+	"github.com/walletConsole/pancakeswap-console/utils"
 	"log"
 	"os"
 	"path/filepath"
@@ -36,8 +38,26 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("PancakeSwap Console version is v1.0")
-		//fmt.Printf("%v",  config.CF)
+		Client = utils.EstimateClient("bsc")
+		g, err := gocui.NewGui(gocui.OutputNormal)
+		if err != nil {
+			log.Panicln(err)
+		}
+		defer g.Close()
+		g.Cursor = true
+		g.Mouse = true
+		g.Highlight = true
+		//g.Cursor = true
+		g.SelFgColor = gocui.ColorGreen
+
+		g.SetManagerFunc(layout)
+
+		if err := keybindings(g); err != nil {
+			log.Panicln(err)
+		}
+		if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+			log.Panicln(err)
+		}
 	},
 }
 
@@ -108,28 +128,4 @@ func initConfig() {
 		}
 	}
 
-	if len(config.CF.PrivateKey) == 0 {
-		log.Fatal(fmt.Errorf("missing PrivateKey )"))
-	}
-	//log.Printf("%v",config.CF.BscToken)
-	//client, err := ethclient.Dial(config.CF.RpcUrl)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//utils.Client = client
-
-}
-
-func initCommonChainFlags(command *cobra.Command) {
-	command.Flags().Uint64VarP(&Gas, "gas", "g", 6, "Gas price(gwei)")
-	//command.Flags().StringVarP(&Chain, "chain", "c", "", "链(eth,heco,bsc)")
-	//command.MarkFlagRequired("chain")
-}
-
-func initCommonMnemonicFlags(command *cobra.Command) {
-	//command.Flags().StringVarP(&ImportMnemonic, "mnemonic", "m", "", "助记词")
-	command.Flags().IntVarP(&Start, "start", "s", 0, "start index")
-	command.Flags().IntVarP(&Num, "num", "n", 1, "address number")
-
-	//command.MarkFlagRequired("mnemonic")
 }

@@ -18,10 +18,11 @@ Clone & compile:
     git clone https://github.com/walletConsole/pancakeswap-console.git
     go mod tidy
     go build
-    go get fyne.io/fyne/cmd/fyne 
+    ./pancakeswap-console 
 
+    # if u want build app follow this
+    # go get fyne.io/fyne/cmd/fyne
     # fyne package -os darwin -app-id "com.openwallet.pancakeswap"
-
     # fyne package -os windows
 
 ## Features

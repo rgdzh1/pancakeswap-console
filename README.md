@@ -35,11 +35,11 @@ Clone & compile:
 
 ## Screen
 
-![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/1.jpg)
+![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/1.png)
 
-![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/2.jpg)
+![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/2.png)
 
-![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/3.jpg)
+![image](https://raw.githubusercontent.com/walletConsole/pancakeswap-console/master/image/3.png)
 
 ### Note
 * The price may be a little different from that of the official website.Because using route path  <token> -> WBNB -> USDT

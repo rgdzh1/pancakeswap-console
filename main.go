@@ -16,9 +16,54 @@ limitations under the License.
 package main
 
 import (
-	"github.com/walletConsole/pancakeswap-console/cmd"
+	"fmt"
+	"fyne.io/fyne/v2/app"
+	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/viper"
+	"github.com/walletConsole/pancakeswap-console/config"
+	"github.com/walletConsole/pancakeswap-console/data"
+	"github.com/walletConsole/pancakeswap-console/screens"
+	"github.com/walletConsole/pancakeswap-console/utils"
+	"os"
+	"path/filepath"
 )
 
 func main() {
-	cmd.Execute()
+
+	home, err := homedir.Dir()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	configFile := filepath.Join(home, "pancake-conf.yaml")
+	if !Exist(configFile) {
+		config.NewConfig(configFile)
+	}
+	viper.AddConfigPath(home)
+	viper.SetConfigName("pancake-conf")
+
+	viper.SetDefault("language", "EN")
+	//viper.AutomaticEnv() // read in environment variables that match
+
+	// If a config file is found, read it in.
+	if err := viper.ReadInConfig(); err == nil {
+		//fmt.Println("Using config file:", viper.ConfigFileUsed())
+		if err := viper.Unmarshal(&config.CF); err != nil {
+			panic(err)
+		}
+	}
+	data.Client = utils.EstimateClient("bsc")
+	go data.StartRefreshPrices()
+
+	a := app.NewWithID("com.openwallet.pancakeswap")
+	a.SetIcon(resourceLogoPng)
+	//a.Settings().SetTheme(theme.LightTheme())
+	a.Settings().SetTheme(&MyTheme{})
+	screens.Master(a)
+
+}
+func Exist(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil || os.IsExist(err)
 }

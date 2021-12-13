@@ -566,16 +566,22 @@ func ToWei(iamount interface{}, decimals int) *big.Int {
 }
 
 func Str2Float(amount string) float64 {
+	if amount == "" {
+		return 0.0
+	}
 	pendingRewardFloat, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		panic(err)
+		return 0.0
 	}
 	return pendingRewardFloat
 }
 func Str2Int(amount string) int64 {
+	if amount == "" {
+		return 0.0
+	}
 	pendingRewardFloat, err := strconv.ParseInt(amount, 10, 64)
 	if err != nil {
-		panic(err)
+		return 0.0
 	}
 	return pendingRewardFloat
 }
